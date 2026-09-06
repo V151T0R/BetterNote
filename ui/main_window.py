@@ -1,9 +1,9 @@
 import os
 from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
                                QFileDialog, QColorDialog, QLabel, QMessageBox,
-                               QFrame, QToolButton, QMenu, QWidgetAction,
+                               QFrame, QToolButton, QMenu, QWidgetAction, QSlider,
                                QGraphicsDropShadowEffect, QScrollArea, QApplication)
-from PySide6.QtGui import QColor, QKeySequence, QAction, QIcon, QPixmap, QPalette
+from PySide6.QtGui import QColor, QKeySequence, QAction, QIcon, QPixmap, QPalette, QCursor
 from PySide6.QtCore import Qt, QEvent, QSize, QByteArray
 
 from core.drawing_engine import DrawingEngine
@@ -14,14 +14,22 @@ from core.tools.eraser import Eraser
 from core.tools.highlighter import Highlighter
 
 from ui.canvas_widget import CanvasWidget
-from ui.toolbar import _WrapLayout, ColorSwatchButton
+from ui.toolbar import _WrapLayout, ColorSwapButton, ThicknessSlider
 from storage.json_store import JSONStore
 from app.config import DEFAULT_PINNED_COLORS
 
+# Resolve project root: ui/ -> parent = project root
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def icon(relative_path: str) -> str:
+    """Resolve an icon path relative to the project root."""
+    return os.path.join(PROJECT_ROOT, relative_path)
+
 def get_colored_icon(svg_path: str, color_hex: str) -> QIcon:
-    if not os.path.exists(svg_path):
+    full_path = icon(svg_path) if not os.path.isabs(svg_path) else svg_path
+    if not os.path.exists(full_path):
         return QIcon()
-    with open(svg_path, 'r', encoding='utf-8') as f:
+    with open(full_path, 'r', encoding='utf-8') as f:
         svg_content = f.read()
     svg_content = svg_content.replace('currentColor', color_hex)
     pixmap = QPixmap()
@@ -31,13 +39,13 @@ def get_colored_icon(svg_path: str, color_hex: str) -> QIcon:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("GoodNote")
+        self.setWindowTitle("Notes")
         self.resize(1100, 800)
         self.setMinimumSize(480, 360)
         
-        icon_path = r"C:\Users\sourav\.gemini\antigravity\brain\86f29009-f33b-4a8b-90f0-f2ba532339c7\goodnote_icon_1788717414791.jpg"
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        icon_path = icon("resources/icons/app_icon.svg")
+        if os.path.exists(icon_path): self.setWindowIcon(QIcon(icon_path))
+           
 
         self.notebook = Notebook()
         self.command_manager = CommandManager()
@@ -66,7 +74,7 @@ class MainWindow(QMainWindow):
         self._build_colors_menu()
         self._build_pages_menu()
         self._build_floating_toolbar()
-        self._build_thickness_bar()
+        self._build_thickness_slider()
         self._build_zoom_bar()
         self._build_shortcuts()
         
@@ -204,88 +212,68 @@ class MainWindow(QMainWindow):
             self.showFullScreen()
         self._update_icon_colors()
 
-    def _build_thickness_bar(self):
-        self.thickness_bar = QWidget(self.scroll_area.viewport())
-        self.thickness_bar.setObjectName("floatingToolbar") # reuse floating panel styling
-        self.thickness_bar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+    def _build_thickness_slider(self):
+        self.thickness_slider_bar = QWidget(self.scroll_area.viewport())
+        self.thickness_slider_bar.setObjectName("floatingToolbar")
+        self.thickness_slider_bar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        shadow = QGraphicsDropShadowEffect(self.thickness_bar)
+        shadow = QGraphicsDropShadowEffect(self.thickness_slider_bar)
         shadow.setBlurRadius(20)
         shadow.setOffset(0, 3)
         shadow.setColor(QColor(0, 0, 0, 60))
-        self.thickness_bar.setGraphicsEffect(shadow)
+        self.thickness_slider_bar.setGraphicsEffect(shadow)
 
-        col = QVBoxLayout(self.thickness_bar)
-        col.setContentsMargins(6, 10, 6, 10)
-        col.setSpacing(12)
+        col = QVBoxLayout(self.thickness_slider_bar)
+        col.setContentsMargins(8, 12, 8, 12)
+        col.setSpacing(8)
 
-        self.thickness_btns = []
-        sizes = [
-            (3.0, 6),
-            (6.0, 10),
-            (12.0, 16),
-            (20.0, 22)
-        ]
-        
-        for width_val, dot_size in sizes:
-            btn = QPushButton()
-            btn.setObjectName("thicknessButton")
-            btn.setFixedSize(32, 32)
-            btn.setCheckable(True)
-            btn.setProperty("stroke_width", width_val)
-            
-            # The circle is drawn via stylesheet based on dot_size
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: transparent;
-                }}
-                QPushButton::indicator {{
-                    width: 0px; height: 0px; /* Disable default */
-                }}
-            """)
-            
-            # Create an inner widget for the actual dot to ensure perfectly round
-            dot = QWidget(btn)
-            dot.setFixedSize(dot_size, dot_size)
-            dot.setObjectName("thicknessDot")
-            # center it
-            dot.move((32 - dot_size) // 2, (32 - dot_size) // 2)
-            
-            btn.clicked.connect(lambda checked, b=btn: self.apply_thickness(b))
-            self.thickness_btns.append(btn)
-            col.addWidget(btn)
-            
-        self.thickness_btns[0].setChecked(True)
-        self.thickness_bar.adjustSize()
+        # Dot indicators for max (top) and min (bottom)
+        self.thickness_top_dot = QLabel()
+        self.thickness_top_dot.setFixedSize(14, 14)
+        self.thickness_top_dot.setStyleSheet("background: rgba(180, 180, 180, 160); border-radius: 7px;")
+        self.thickness_top_dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def apply_thickness(self, btn):
-        for b in self.thickness_btns:
-            b.setChecked(b == btn)
-        width = btn.property("stroke_width")
+        self.thickness_bot_dot = QLabel()
+        self.thickness_bot_dot.setFixedSize(6, 6)
+        self.thickness_bot_dot.setStyleSheet("background: rgba(180, 180, 180, 160); border-radius: 3px;")
+        self.thickness_bot_dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.thickness_slider = ThicknessSlider(Qt.Orientation.Vertical)
+        self.thickness_slider.setObjectName("thicknessSlider")
+        self.thickness_slider.setRange(1, 40)
+        self.thickness_slider.setValue(int(getattr(self.engine.tools["pen"], "width", 3)))
+        self.thickness_slider.setFixedHeight(120)
+        self.thickness_slider.setFixedWidth(24)
+        self.thickness_slider.setToolTip("Stroke Thickness")
+        self.thickness_slider.valueChanged.connect(self.apply_thickness)
+
+        col.addWidget(self.thickness_top_dot, alignment=Qt.AlignmentFlag.AlignCenter)
+        col.addWidget(self.thickness_slider, alignment=Qt.AlignmentFlag.AlignCenter)
+        col.addWidget(self.thickness_bot_dot, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.thickness_bar = self.thickness_slider_bar  # Backward compatibility alias
+        self.thickness_slider_bar.adjustSize()
+
+    def apply_thickness(self, value):
+        if isinstance(value, QPushButton):
+            width = float(value.property("stroke_width"))
+        else:
+            width = float(value)
         
         if hasattr(self.engine.tools["pen"], "width"):
             self.engine.tools["pen"].width = width
         # Highlighter thickness is usually larger, scale it slightly
         if hasattr(self.engine.tools["highlighter"], "width"):
             self.engine.tools["highlighter"].width = width * 2.0
-            
+        if hasattr(self.engine.tools["eraser"], "radius"):
+            self.engine.tools["eraser"].radius = width * 2.0
+
     def _recolor_thickness_bar(self):
-        # We need to style the inner dots
         text_color = self.palette().color(QPalette.ColorRole.WindowText).name()
-        accent = self.palette().color(QPalette.ColorRole.Highlight).name()
-        
-        for btn in self.thickness_btns:
-            dot = btn.findChild(QWidget, "thicknessDot")
-            if dot:
-                # If button is checked, use accent color, else text_color
-                color = accent if btn.isChecked() else text_color
-                r = dot.width() // 2
-                dot.setStyleSheet(f"""
-                    QWidget#thicknessDot {{
-                        background-color: {color};
-                        border-radius: {r}px;
-                    }}
-                """)
+        if hasattr(self, "thickness_top_dot"):
+            self.thickness_top_dot.setStyleSheet(f"background: {text_color}; border-radius: 7px;")
+        if hasattr(self, "thickness_bot_dot"):
+            self.thickness_bot_dot.setStyleSheet(f"background: {text_color}; border-radius: 3px;")
 
     def _update_icon_colors(self):
         text_color = self.palette().color(QPalette.ColorRole.WindowText).name()
@@ -298,6 +286,7 @@ class MainWindow(QMainWindow):
         self.btn_next.setIcon(get_colored_icon("resources/icons/next.svg", text_color))
         self.btn_add_page.setIcon(get_colored_icon("resources/icons/add.svg", text_color))
         self.pages_button.setIcon(get_colored_icon("resources/icons/more.svg", text_color))
+        self.file_menu_button.setIcon(get_colored_icon("resources/icons/down.svg", text_color))
         
         if self.isFullScreen():
             self.btn_fullscreen.setIcon(get_colored_icon("resources/icons/fullscreen_exit.svg", text_color))
@@ -421,10 +410,12 @@ class MainWindow(QMainWindow):
         self.zoom_bar.move(zx, zy)
         self.zoom_bar.raise_()
         
-        self.thickness_bar.adjustSize()
-        ty = max(8, (viewport.height() - self.thickness_bar.height()) // 2)
-        self.thickness_bar.move(14, ty)
-        self.thickness_bar.raise_()
+        slider_bar = getattr(self, "thickness_slider_bar", getattr(self, "thickness_bar", None))
+        if slider_bar:
+            slider_bar.adjustSize()
+            ty = max(8, (viewport.height() - slider_bar.height()) // 2)
+            slider_bar.move(14, ty)
+            slider_bar.raise_()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -506,11 +497,11 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
 
         act_export_pdf = QAction("Export as PDF…", self)
-        act_export_pdf.triggered.connect(self.canvas.export_pdf)
+        act_export_pdf.triggered.connect(self.export_pdf)
         menu.addAction(act_export_pdf)
 
         act_export_image = QAction("Export as Image…", self)
-        act_export_image.triggered.connect(self.canvas.export_image)
+        act_export_image.triggered.connect(self.export_image)
         menu.addAction(act_export_image)
 
         menu.addSeparator()
@@ -620,7 +611,7 @@ class MainWindow(QMainWindow):
     def refresh_pinned_swatches(self):
         self.swatch_layout.clear()
         for hex_color in self.pinned_colors:
-            swatch = ColorSwatchButton(hex_color, self.apply_color, removable_cb=self.unpin_color)
+            swatch = ColorSwapButton(hex_color, self.apply_color, removable_cb=self.unpin_color)
             self.swatch_layout.addWidget(swatch)
 
     def choose_background(self):
@@ -673,6 +664,33 @@ class MainWindow(QMainWindow):
             self.current_file = filename
             self.canvas.dirty = False
             print(f"Saved {len(self.notebook.pages)} page(s) to {filename}")
+            
+    def export_pdf(self):
+        filename, _ = QFileDialog.getSaveFileName(self, "Export as PDF", "", "PDF Files (*.pdf)")
+        if filename:
+            if not filename.lower().endswith(".pdf"):
+                filename += ".pdf"
+            try:
+                success = self.canvas.export_pdf(filename)
+                if not success:
+                    QMessageBox.warning(self, "Export Failed", "Failed to export PDF.")
+            except Exception as e:
+                QMessageBox.warning(self, "Export Failed", f"Could not export PDF:\n{e}")
+
+    def export_image(self):
+        filename, _ = QFileDialog.getSaveFileName(
+            self, "Export as Image", "", "PNG Image (*.png);;JPEG Image (*.jpg *.jpeg)"
+        )
+        if filename:
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in (".png", ".jpg", ".jpeg"):
+                filename += ".png"
+            try:
+                success = self.canvas.export_image(filename)
+                if not success:
+                    QMessageBox.warning(self, "Export Failed", "Failed to save the image file.")
+            except Exception as e:
+                QMessageBox.warning(self, "Export Failed", f"Could not export Image:\n{e}")
 
     def load_file(self):
         if not self.confirm_discard_if_dirty():
@@ -691,12 +709,22 @@ class MainWindow(QMainWindow):
     def confirm_discard_if_dirty(self):
         if not self.canvas.dirty:
             return True
-        reply = QMessageBox.question(
-            self, "Unsaved Changes",
-            "You have unsaved changes. Do you want to save them first?",
-            QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Save,
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Unsaved Changes")
+        msg_box.setText("You have unsaved changes.\nDo you want to save them first?")
+        msg_box.setIcon(QMessageBox.Icon.NoIcon)
+        msg_box.setStandardButtons(
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel
         )
+        msg_box.setDefaultButton(QMessageBox.StandardButton.Save)
+
+        # Center align text
+        for lbl in msg_box.findChildren(QLabel):
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        reply = msg_box.exec()
         if reply == QMessageBox.StandardButton.Save:
             self.save_file()
             return not self.canvas.dirty

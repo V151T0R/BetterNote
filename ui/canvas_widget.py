@@ -1,4 +1,4 @@
-﻿from PySide6.QtWidgets import QWidget, QScrollArea
+from PySide6.QtWidgets import QWidget, QScrollArea
 from PySide6.QtGui import QPainter, QPainterPath, QPen, QColor, QMouseEvent, QTabletEvent, QPalette, QWheelEvent, QPixmap, QPageLayout
 from PySide6.QtCore import Qt, QPointF, QEvent, QRectF, QSizeF
 from PySide6.QtPrintSupport import QPrinter
@@ -197,22 +197,24 @@ class CanvasWidget(QWidget):
         super().keyReleaseEvent(e)
 
     # --- Rendering ---
-    def render_page(self, painter: QPainter, page_index, target_rect: QRectF, scale=1.0, exclude_strokes=None):
+    def render_page(self, painter: QPainter, page_index, target_rect: QRectF, scale=1.0, exclude_strokes=None, draw_shadow=True):
         page = self.engine.notebook.pages[page_index]
         if exclude_strokes is None:
             exclude_strokes = []
         
         # Draw shadow
-        shadow_rect = QRectF(target_rect.x() + 4*scale, target_rect.y() + 4*scale, target_rect.width(), target_rect.height())
-        painter.fillRect(shadow_rect, QColor(0, 0, 0, 30))
+        if draw_shadow:
+            shadow_rect = QRectF(target_rect.x() + 4*scale, target_rect.y() + 4*scale, target_rect.width(), target_rect.height())
+            painter.fillRect(shadow_rect, QColor(0, 0, 0, 30))
         
         # Draw paper background
         bg = QColor(page.background) if page.background else QColor("#ffffff") # Force white as default paper color
         painter.fillRect(target_rect, bg)
         
         # Draw thin border
-        painter.setPen(QPen(QColor(0, 0, 0, 40), 1))
-        painter.drawRect(target_rect)
+        if draw_shadow:
+            painter.setPen(QPen(QColor(0, 0, 0, 40), 1))
+            painter.drawRect(target_rect)
 
         # Draw strokes
         painter.save()
@@ -384,7 +386,8 @@ class CanvasWidget(QWidget):
             printer.setPageOrientation(QPageLayout.Orientation.Portrait)
 
         painter = QPainter()
-        painter.begin(printer)
+        if not painter.begin(printer):
+            return False
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         canvas_w = BASE_PAGE_WIDTH
@@ -398,15 +401,19 @@ class CanvasWidget(QWidget):
             offset_x = (page_rect.width() - canvas_w * scale) / 2.0
             offset_y = (page_rect.height() - canvas_h * scale) / 2.0
             target = QRectF(offset_x, offset_y, canvas_w * scale, canvas_h * scale)
-            self.render_page(painter, i, target, scale=scale)
+            self.render_page(painter, i, target, scale=scale, draw_shadow=False)
         painter.end()
+        return True
 
     def export_image(self, filename, page_index=None):
         if page_index is None:
             page_index = self.engine.current_page_index
-        pixmap = QPixmap(BASE_PAGE_WIDTH, BASE_PAGE_HEIGHT)
+        pixmap = QPixmap(int(BASE_PAGE_WIDTH), int(BASE_PAGE_HEIGHT))
+        page = self.engine.notebook.pages[page_index]
+        bg = QColor(page.background) if page.background else QColor("#ffffff")
+        pixmap.fill(bg)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self.render_page(painter, page_index, QRectF(0, 0, BASE_PAGE_WIDTH, BASE_PAGE_HEIGHT), scale=1.0)
+        self.render_page(painter, page_index, QRectF(0, 0, BASE_PAGE_WIDTH, BASE_PAGE_HEIGHT), scale=1.0, draw_shadow=False)
         painter.end()
-        pixmap.save(filename)
+        return pixmap.save(filename)
