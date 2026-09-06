@@ -1,4 +1,4 @@
-﻿from typing import Optional, Dict
+from typing import Optional, Dict
 from core.notebook import Notebook
 from core.page import Page
 from core.tools.tool import Tool
