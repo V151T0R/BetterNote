@@ -16,15 +16,12 @@ def build_theme_stylesheet(palette: QPalette, base_point_size: float) -> str:
     accent_text = palette.color(QPalette.ColorRole.HighlightedText)
 
     is_dark = base.lightness() < 128
-    hover = base.lighter(255) if is_dark else base.darker(106)
-    pressed = base.lighter(255
-
-
-                           ) if is_dark else base.darker(112)
+    hover = base.lighter(108) if is_dark else QColor(241, 243, 247)
+    pressed = base.lighter(116) if is_dark else QColor(230, 233, 240)
     panel = QColor(base)
-    panel.setAlpha(240)
+    panel.setAlpha(245)
     border = QColor(mid)
-    border.setAlpha(140)
+    border.setAlpha(120)
     subtext = QColor(text)
     subtext.setAlpha(160)
     disabled_text = QColor(text)
@@ -33,7 +30,8 @@ def build_theme_stylesheet(palette: QPalette, base_point_size: float) -> str:
     pt = max(base_point_size, 8)
     font_family = "'Segoe UI', 'SF Pro Text', 'Inter', -apple-system, sans-serif"
 
-    desk_bg = window.darker(50) if is_dark else window.darker(50)
+    # Soothing desk background that lets the crisp white page with its drop shadow stand out
+    desk_bg = QColor("#18191E") if is_dark else QColor("#F0F2F6")
 
     return f"""
 QMainWindow {{
@@ -182,6 +180,24 @@ QPushButton:disabled {{
 QPushButton#iconButton, QToolButton#iconButton, QPushButton#navButton {{
     padding: 6px;
     border-radius: 16px;
+    background-color: transparent;
+    border: 1px solid transparent;
+}}
+QPushButton#iconButton:hover, QToolButton#iconButton:hover, QPushButton#navButton:hover {{
+    background-color: {_rgba(accent, 22)};
+    border-color: transparent;
+}}
+QPushButton#iconButton:pressed, QToolButton#iconButton:pressed, QPushButton#navButton:pressed {{
+    background-color: {_rgba(accent, 45)};
+    border-color: transparent;
+}}
+QPushButton#iconButton:checked {{
+    background-color: {accent.name()};
+    border-color: {accent.name()};
+}}
+QPushButton#iconButton:checked:hover {{
+    background-color: {accent.darker(110).name()};
+    border-color: {accent.darker(110).name()};
 }}
 QPushButton#iconButton:disabled, QToolButton#iconButton:disabled, QPushButton#navButton:disabled {{
     background-color: transparent;
@@ -193,6 +209,12 @@ QPushButton#zoomButton {{
     padding: 0px;
     border-radius: 14px;
     font-size: {pt + 2}pt;
+}}
+QPushButton#zoomButton:hover {{
+    background-color: {_rgba(accent, 22)};
+}}
+QPushButton#zoomButton:pressed {{
+    background-color: {_rgba(accent, 45)};
 }}
 
 /* ---------- File Menu Button ---------- */
@@ -266,7 +288,8 @@ QMenu::item {{
     color: {text.name()};
 }}
 QMenu::item:selected {{
-    background-color: {hover.name()};
+    background-color: {_rgba(accent, 25)};
+    color: {accent.name()};
 }}
 QMenu::item:disabled {{
     color: {_rgba(text, 100)};
@@ -311,7 +334,7 @@ QMessageBox QPushButton {{
     color: {text.name()};
 }}
 QMessageBox QPushButton:hover {{
-    background-color: {hover.name()};
+    background-color: {_rgba(accent, 22)};
     border-color: {accent.name()};
 }}
 QMessageBox QPushButton:default {{
@@ -319,6 +342,9 @@ QMessageBox QPushButton:default {{
     color: {accent_text.name()};
     border: 1px solid {accent.name()};
     font-weight: 600;
+}}
+QMessageBox QPushButton:default:hover {{
+    background-color: {accent.darker(110).name()};
 }}
 """
 
@@ -328,7 +354,7 @@ class Application:
         self.app.setStyle("Fusion")
         
         palette = self.app.palette()
-        palette.setColor(QPalette.ColorRole.Highlight, QColor("#20A756"))
+        palette.setColor(QPalette.ColorRole.Highlight, QColor("#4F46E5"))
         palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff"))
         self.app.setPalette(palette)
         

@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QToolButton, QMenu, QWidgetAction,
     QFrame, QLabel, QGraphicsDropShadowEffect, QSlider, QStyleOptionSlider, QStyle
 )
-from PySide6.QtGui import QColor, QKeySequence, QAction, QPainter, QPen
+from PySide6.QtGui import QColor, QKeySequence, QAction, QPainter, QPen, QPalette
 from PySide6.QtCore import Qt, QRectF, QPointF
 
 class _WrapLayout(QWidget):
@@ -32,7 +32,7 @@ class _WrapLayout(QWidget):
         self._widgets = []
 
 class ColorSwapButton(QPushButton):
-    def __init__(self, hex_color, on_click, accent_hex="#FFFFFF", removable_cb=None):
+    def __init__(self, hex_color, on_click, accent_hex="#4F46E5", removable_cb=None):
         super().__init__()
         self.hex_color = hex_color
         self.setObjectName("colorSwapButton")
@@ -42,7 +42,7 @@ class ColorSwapButton(QPushButton):
         self.setStyleSheet(f"""
             QPushButton#colorSwapButton {{
                 background-color: {hex_color} !important;
-                border: 2px solid rgba(0, 0, 0, 40) !important;
+                border: 2px solid rgba(0, 0, 0, 35) !important;
                 border-radius: 12px !important;
             }}
             QPushButton#colorSwapButton:hover {{
@@ -75,18 +75,22 @@ class ThicknessSlider(QSlider):
         track_w = 4.0
         margin = 10.0
 
+        accent = self.palette().color(QPalette.ColorRole.Highlight)
+        if not accent.isValid() or accent.name().lower() in ("#000000", "#ffffff"):
+            accent = QColor("#4F46E5")
+
         # Background track
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(100, 100, 100, 120))
+        painter.setBrush(QColor(210, 215, 225, 160))
         painter.drawRoundedRect(
             QRectF(gx - track_w / 2.0, margin, track_w, self.height() - 2.0 * margin), 2.0, 2.0
         )
 
-        # Active lower track (filled in vibrant green)
+        # Active lower track (filled in accent)
         hy = handle_rect.center().y()
         bot_y = self.height() - margin
         if bot_y > hy:
-            painter.setBrush(QColor("#20A756"))
+            painter.setBrush(accent)
             painter.drawRoundedRect(
                 QRectF(gx - track_w / 2.0, hy, track_w, bot_y - hy), 2.0, 2.0
             )
@@ -97,12 +101,14 @@ class ThicknessSlider(QSlider):
 
         # Glowing ring light when hovered or dragged
         if is_active:
-            painter.setPen(QPen(QColor(32, 167, 86, 120), 4.0))
+            glow = QColor(accent)
+            glow.setAlpha(90)
+            painter.setPen(QPen(glow, 4.0))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawEllipse(center, radius + 2.5, radius + 2.5)
 
         # Perfectly antialiased circular thumb
-        border_col = QColor("#20A756") if is_active else QColor(190, 190, 190)
+        border_col = accent if is_active else QColor(180, 185, 195)
         painter.setPen(QPen(border_col, 2.0))
         painter.setBrush(QColor("#ffffff"))
         painter.drawEllipse(center, radius, radius)

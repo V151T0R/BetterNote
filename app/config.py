@@ -1,4 +1,11 @@
-DEFAULT_PINNED_COLORS = ["#000000", "#e53935", "#1e88e5", "#43a047", "#fb8c00"]
+DEFAULT_PINNED_COLORS = [
+    "#1F2937",  # Graphite Charcoal (matches pencil lead in app icon)
+    "#4F46E5",  # Royal Indigo (matches notebook cover in app icon)
+    "#2563EB",  # Vibrant Blue (matches icon gradient)
+    "#EC4899",  # Bookmark Rose (matches ribbon bookmark in app icon)
+    "#F59E0B",  # Warm Amber (matches pencil body in app icon)
+    "#10B981",  # Soothing Emerald
+]
 
 BASE_PAGE_WIDTH = 850
 BASE_PAGE_HEIGHT = 1100

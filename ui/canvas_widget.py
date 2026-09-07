@@ -286,11 +286,11 @@ class CanvasWidget(QWidget):
                     sel_rect = QRectF(screen_x, screen_y, rw * self.zoom, rh * self.zoom)
                     
                     painter.save()
-                    pen = QPen(QColor(0, 120, 215))
+                    pen = QPen(QColor(79, 70, 229))  # Soothing Indigo matching app icon
                     pen.setStyle(Qt.PenStyle.DashLine)
                     pen.setWidth(2)
                     painter.setPen(pen)
-                    painter.fillRect(sel_rect, QColor(0, 120, 215, 30))
+                    painter.fillRect(sel_rect, QColor(79, 70, 229, 35))
                     painter.drawRect(sel_rect)
                     painter.restore()
             
@@ -306,17 +306,19 @@ class CanvasWidget(QWidget):
                 
                 page = self.engine.current_page
                 for idx in tool.selected_indices:
-                    if 0 <= idx < len(page.strokes):
-                        stroke = page.strokes[idx]
-                        path = self.page_paths[self.engine.current_page_index][idx]
-                        
-                        t_path = path.translated(dx, dy)
-                        
+                    stroke = page.strokes[idx]
+                    path = self.page_paths[self.engine.current_page_index][idx]
+                    
+                    t_path = QPainterPath(path)
+                    t_path.translate(dx, dy)
+                    
+                    if hasattr(self.engine, "tools") and isinstance(self.engine.tools.get("eraser"), Eraser) and idx in self.engine.tools["eraser"].strokes_to_delete:
+                        continue
+                    else:
                         pen = QPen(QColor(stroke.color))
                         pen.setWidthF(stroke.width)
                         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
                         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-                        pen.setCosmetic(False)
                         painter.setPen(pen)
                         painter.drawPath(t_path)
                         
@@ -326,7 +328,7 @@ class CanvasWidget(QWidget):
                     bx, by, bw, bh = bbox
                     bx += dx
                     by += dy
-                    painter.setPen(QPen(QColor(100, 100, 100, 200), 1, Qt.PenStyle.DashLine))
+                    painter.setPen(QPen(QColor(79, 70, 229, 180), 1, Qt.PenStyle.DashLine))
                     painter.setBrush(Qt.BrushStyle.NoBrush)
                     pen = painter.pen()
                     pen.setWidthF(1.0 / self.zoom)

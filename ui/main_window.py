@@ -25,16 +25,28 @@ def icon(relative_path: str) -> str:
     """Resolve an icon path relative to the project root."""
     return os.path.join(PROJECT_ROOT, relative_path)
 
-def get_colored_icon(svg_path: str, color_hex: str) -> QIcon:
+def get_colored_icon(svg_path: str, color_hex: str, checked_hex: str = None) -> QIcon:
     full_path = icon(svg_path) if not os.path.isabs(svg_path) else svg_path
     if not os.path.exists(full_path):
         return QIcon()
     with open(full_path, 'r', encoding='utf-8') as f:
-        svg_content = f.read()
-    svg_content = svg_content.replace('currentColor', color_hex)
-    pixmap = QPixmap()
-    pixmap.loadFromData(QByteArray(svg_content.encode('utf-8')))
-    return QIcon(pixmap)
+        raw_svg = f.read()
+    
+    icon_obj = QIcon()
+    off_svg = raw_svg.replace('currentColor', color_hex)
+    off_pix = QPixmap()
+    off_pix.loadFromData(QByteArray(off_svg.encode('utf-8')))
+    icon_obj.addPixmap(off_pix, QIcon.Mode.Normal, QIcon.State.Off)
+    
+    if checked_hex:
+        on_svg = raw_svg.replace('currentColor', checked_hex)
+        on_pix = QPixmap()
+        on_pix.loadFromData(QByteArray(on_svg.encode('utf-8')))
+        icon_obj.addPixmap(on_pix, QIcon.Mode.Normal, QIcon.State.On)
+    else:
+        icon_obj.addPixmap(off_pix, QIcon.Mode.Normal, QIcon.State.On)
+        
+    return icon_obj
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -269,29 +281,31 @@ class MainWindow(QMainWindow):
             self.engine.tools["eraser"].radius = width * 2.0
 
     def _recolor_thickness_bar(self):
-        text_color = self.palette().color(QPalette.ColorRole.WindowText).name()
+        is_dark = self.palette().color(QPalette.ColorRole.Base).lightness() < 128
+        dot_color = "rgba(165, 180, 252, 180)" if is_dark else "rgba(79, 70, 229, 140)"
         if hasattr(self, "thickness_top_dot"):
-            self.thickness_top_dot.setStyleSheet(f"background: {text_color}; border-radius: 7px;")
+            self.thickness_top_dot.setStyleSheet(f"background: {dot_color}; border-radius: 7px;")
         if hasattr(self, "thickness_bot_dot"):
-            self.thickness_bot_dot.setStyleSheet(f"background: {text_color}; border-radius: 3px;")
+            self.thickness_bot_dot.setStyleSheet(f"background: {dot_color}; border-radius: 3px;")
 
     def _update_icon_colors(self):
-        text_color = self.palette().color(QPalette.ColorRole.WindowText).name()
+        is_dark = self.palette().color(QPalette.ColorRole.Base).lightness() < 128
+        normal_color = "#E5E7EB" if is_dark else "#374151"
+        checked_color = "#FFFFFF"
         
-        self.btn_select.setIcon(get_colored_icon("resources/icons/select.svg", text_color))
-        self.btn_pen.setIcon(get_colored_icon("resources/icons/pen.svg", text_color))
-        self.btn_highlighter.setIcon(get_colored_icon("resources/icons/highlighter.svg", text_color))
-        self.btn_eraser.setIcon(get_colored_icon("resources/icons/eraser.svg", text_color))
-        self.btn_prev.setIcon(get_colored_icon("resources/icons/prev.svg", text_color))
-        self.btn_next.setIcon(get_colored_icon("resources/icons/next.svg", text_color))
-        self.btn_add_page.setIcon(get_colored_icon("resources/icons/add.svg", text_color))
-        self.pages_button.setIcon(get_colored_icon("resources/icons/more.svg", text_color))
-        self.file_menu_button.setIcon(get_colored_icon("resources/icons/down.svg", text_color))
+        self.btn_select.setIcon(get_colored_icon("resources/icons/select.svg", normal_color, checked_color))
+        self.btn_pen.setIcon(get_colored_icon("resources/icons/pen.svg", normal_color, checked_color))
+        self.btn_highlighter.setIcon(get_colored_icon("resources/icons/highlighter.svg", normal_color, checked_color))
+        self.btn_eraser.setIcon(get_colored_icon("resources/icons/eraser.svg", normal_color, checked_color))
         
-        if self.isFullScreen():
-            self.btn_fullscreen.setIcon(get_colored_icon("resources/icons/fullscreen_exit.svg", text_color))
-        else:
-            self.btn_fullscreen.setIcon(get_colored_icon("resources/icons/fullscreen.svg", text_color))
+        self.btn_prev.setIcon(get_colored_icon("resources/icons/prev.svg", normal_color))
+        self.btn_next.setIcon(get_colored_icon("resources/icons/next.svg", normal_color))
+        self.btn_add_page.setIcon(get_colored_icon("resources/icons/add.svg", normal_color))
+        self.pages_button.setIcon(get_colored_icon("resources/icons/more.svg", normal_color))
+        self.file_menu_button.setIcon(get_colored_icon("resources/icons/down.svg", "#FFFFFF"))
+        
+        fs_icon = "resources/icons/fullscreen_exit.svg" if self.isFullScreen() else "resources/icons/fullscreen.svg"
+        self.btn_fullscreen.setIcon(get_colored_icon(fs_icon, normal_color))
             
         self._recolor_thickness_bar()
 
@@ -555,6 +569,7 @@ class MainWindow(QMainWindow):
         self.btn_eraser.setChecked(False)
         self.btn_select.setChecked(False)
         self._recolor_colors_button()
+        self.canvas.update()
         
     def activate_highlighter(self):
         self.engine.use_tool("highlighter")
@@ -563,6 +578,7 @@ class MainWindow(QMainWindow):
         self.btn_eraser.setChecked(False)
         self.btn_select.setChecked(False)
         self._recolor_colors_button()
+        self.canvas.update()
 
     def activate_eraser(self):
         self.engine.use_tool("eraser")
@@ -570,6 +586,8 @@ class MainWindow(QMainWindow):
         self.btn_highlighter.setChecked(False)
         self.btn_eraser.setChecked(True)
         self.btn_select.setChecked(False)
+        self.canvas.update()
+
     def activate_select(self):
         self.engine.use_tool("selection")
         self.btn_pen.setChecked(False)
@@ -588,6 +606,7 @@ class MainWindow(QMainWindow):
         self._recolor_colors_button()
         if isinstance(self.engine.active_tool, Eraser):
             self.activate_pen()
+        self.canvas.update()
 
     def choose_color(self):
         color = QColorDialog.getColor()
@@ -610,8 +629,9 @@ class MainWindow(QMainWindow):
 
     def refresh_pinned_swatches(self):
         self.swatch_layout.clear()
+        accent_hex = self.palette().color(QPalette.ColorRole.Highlight).name()
         for hex_color in self.pinned_colors:
-            swatch = ColorSwapButton(hex_color, self.apply_color, removable_cb=self.unpin_color)
+            swatch = ColorSwapButton(hex_color, self.apply_color, accent_hex=accent_hex, removable_cb=self.unpin_color)
             self.swatch_layout.addWidget(swatch)
 
     def choose_background(self):
