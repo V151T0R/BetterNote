@@ -1,161 +1,225 @@
-# HandNote
+# 📓 BetterNote
 
-A desktop handwritten note-taking application built with **Python and PySide6**, designed around a modular drawing engine with AI-powered handwriting, gesture, and shape recognition.
+A modern, distraction-free handwritten digital notebook application built with **Python** and **PySide6 (Qt)**. Designed with a modular vector inking engine, undo/redo command history, customizable color palettes, multi-page notebooks, and export capabilities.
 
-The goal of HandNote is to provide a modern digital notebook experience while keeping the application architecture extensible enough to support intelligent features later.
-
----
-
-## Features
-
-### Core Note-Taking
-
-* Handwritten notes
-* Pen and highlighter
-* Eraser
-* Undo / redo
-* Multiple pages
-* Multiple notebooks
-* Page navigation
-* Zoom and pan
-* Different page backgrounds
-
-  * Blank
-  * Ruled
-  * Grid
-  * Dotted
-
-### Drawing
-
-* Smooth freehand strokes
-* Adjustable pen size
-* Adjustable pen color
-* Stylus support
-* Pressure-sensitive strokes
-* Stroke-based document representation
-
-### AI Features
-
-* Handwriting recognition
-* Gesture recognition
-* Shape recognition
-* Intelligent shape correction
-* AI-assisted note processing
-* Future AI-powered search and summarization
+![BetterNote Banner](resources/icons/app_icon.svg)
 
 ---
 
-# Architecture
+## ✨ Features
 
-HandNote follows a modular architecture where the UI, drawing engine, document model, storage system, and AI systems are separated.
+### ✍️ Vector Inking & Tools
+- **Pressure-Sensitive Drawing**: Smooth freehand strokes rendered using quadratic Bézier curve interpolation.
+- **Pen Tool (`P`)**: Clean vector pen with dynamic width and color.
+- **Highlighter Tool (`H`)**: Translucent, blended highlighting for annotating notes and sketches.
+- **Eraser Tool (`E`)**: Precise stroke-intersection eraser with scalable deletion radius.
+- **Selection & Transform Tool (`S`)**: Lasso/bounding-box tool to select individual or groups of strokes and drag/reposition them across the canvas.
+- **Interactive Thickness Slider**: Floating vertical slider for adjusting stroke widths on the fly.
+
+### 🎨 Color & Swatch Management
+- **Smart Color Swap Button**: Instant access to custom color pickers.
+- **Pinned Swatches**: Quick-select color bar with right-click-to-unpin support.
+- **Custom Color Palette**: Curated soothing default colors matching the app's signature indigo theme (Charcoal, Royal Indigo, Ocean Blue, Ribbon Rose, Warm Amber, Emerald).
+- **Custom Page Backgrounds**: Change notebook page background colors per document.
+
+### 📑 Document & Page Handling
+- **Multi-Page Documents**: Create, navigate, clear, and delete pages seamlessly.
+- **Page Indicator**: Clean `Current / Total` page counter with instant navigation buttons.
+- **Zoom & Pan**:
+  - Smooth zoom controls from `25%` to `400%`.
+  - Pan freely across large canvases using **`Space` + Mouse Drag** or middle-mouse click.
+- **Robust Command History**: Complete multi-step **Undo (`Ctrl+Z`)** and **Redo (`Ctrl+Y`)** powered by the Command Pattern.
+
+### 💾 File Formats & Export
+- **Native JSON Notebooks (`.json`)**: Lightweight, human-readable document format storing exact stroke vectors, widths, colors, and metadata.
+- **Export to PDF**: Vector export creating print-ready document pages.
+- **Export to Image**: High-resolution raster export supporting `.png`, `.jpg`, and `.bmp`.
+
+### 🖥️ Modern UI & Styling
+- **Calm, Soothing Workspace**: Soft slate desk background with realistic paper sheet elevation and drop-shadows.
+- **Floating Frosted Toolbars**: Pill-shaped toolbars for tools, page controls, stroke thickness, and zoom.
+- **Dual-State Icons**: High-contrast icons that switch between crisp white on active Indigo badges and subtle slate graphite when inactive.
+- **Distraction-Free Fullscreen (`F11`)**: One-click fullscreen mode for focused writing and tablet sketching.
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+| :--- | :--- |
+| **`P`** | Activate Pen tool |
+| **`H`** | Activate Highlighter tool |
+| **`E`** | Activate Eraser tool |
+| **`S`** | Activate Selection tool |
+| **`Ctrl + Z`** | Undo last action |
+| **`Ctrl + Y`** / **`Ctrl + Shift + Z`** | Redo action |
+| **`Ctrl + S`** | Save document |
+| **`Ctrl + Shift + S`** | Save document as… |
+| **`Ctrl + O`** | Open existing document |
+| **`Ctrl + +`** | Zoom in |
+| **`Ctrl + -`** | Zoom out |
+| **`Ctrl + 0`** | Reset zoom to 100% |
+| **`Space + Drag`** | Pan canvas |
+| **`F11`** | Toggle Fullscreen |
+
+---
+
+## 🏛️ Architecture Overview
+
+BetterNote follows a strict modular architecture separating UI presentation, editing logic, document representation, and file storage:
 
 ```text
-                         HandNote
+                        BetterNote
                             │
           ┌─────────────────┼─────────────────┐
           │                 │                 │
-         UI              Core Editor           AI
+         UI            Core Editor         Storage
           │                 │                 │
-     ┌────┼────┐       ┌────┼────┐       ┌────┼────┐
-     │    │    │       │    │    │       │    │    │
- Toolbar Sidebar Canvas  Page Stroke Tools Gesture Shape OCR
-                                      │
-                                      ▼
-                                  Document
-                                      │
-                                      ▼
-                                   Storage
+     ┌────┼────┐       ┌────┼────┐            ▼
+     │    │    │       │    │    │        JSON Store
+  Toolbar Canvas  Page Stroke Tools    (Save / Load)
+  Widgets Overlays     │        │
+                       ▼        ▼
+                   Notebook  Commands
+                              (Undo/Redo)
 ```
 
-The main principle is:
-
-> The UI should display and interact with the document, but it should not own the document's data or business logic.
+- **`core/`**: Document data models (`Notebook`, `Page`, `Stroke`), vector tools, and undo/redo command definitions.
+- **`ui/`**: Qt widgets, drawing canvas (`CanvasWidget`), floating toolbars, and main application window.
+- **`app/`**: Application lifecycle, theme stylesheet generator, and global configuration.
+- **`storage/`**: Serialization engine for reading and writing `.json` notebooks and exporting documents.
+- **`resources/`**: High-resolution SVG vectors and multi-resolution Windows icons (`.ico`).
 
 ---
 
-# Project Structure
+## 📁 Project Structure
 
 ```text
-HandNote/
-│
-├── main.py
+BetterNote/
+├── main.py                     # Application entry point
+├── requirements.txt            # Python package dependencies
+├── README.md                   # Project documentation
 │
 ├── app/
 │   ├── __init__.py
-│   ├── application.py
-│   └── config.py
-│
-├── ui/
-│   ├── __init__.py
-│   ├── main_window.py
-│   ├── toolbar.py
-│   ├── sidebar.py
-│   └── canvas_widget.py
+│   ├── application.py          # QApplication setup & theme stylesheet builder
+│   └── config.py               # Constants, zoom steps, and default palettes
 │
 ├── core/
-│   ├── __init__.py
-│   ├── document.py
-│   ├── notebook.py
-│   ├── page.py
-│   ├── stroke.py
-│   ├── drawing_engine.py
-│   │
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── pen.py
-│   │   ├── eraser.py
-│   │   ├── highlighter.py
-│   │   └── selection.py
-│   │
-│   └── commands/
-│       ├── __init__.py
-│       ├── add_stroke.py
-│       ├── delete_stroke.py
-│       ├── move_stroke.py
-│       └── command_manager.py
+│   ├── notebook.py             # Notebook model containing pages
+│   ├── page.py                 # Page model containing strokes & background
+│   ├── stroke.py               # Stroke point coordinates & properties
+│   ├── drawing_engine.py       # Core tool coordinator and event router
+│   ├── commands/               # Command pattern implementations (Undo/Redo)
+│   │   ├── command_manager.py
+│   │   ├── add_stroke.py
+│   │   ├── delete_stroke.py
+│   │   └── move_stroke.py
+│   └── tools/                  # Drawing tools
+│       ├── tool.py             # Base tool class
+│       ├── pen.py
+│       ├── highlighter.py
+│       ├── eraser.py
+│       └── selection.py
 │
-├── ai/
-│   ├── __init__.py
-│   ├── ai_manager.py
-│   │
-│   ├── gesture/
-│   │   ├── __init__.py
-│   │   ├── recognizer.py
-│   │   ├── features.py
-│   │   └── gestures.py
-│   │
-│   ├── handwriting/
-│   │   ├── __init__.py
-│   │   ├── recognizer.py
-│   │   └── processor.py
-│   │
-│   ├── shapes/
-│   │   ├── __init__.py
-│   │   └── recognizer.py
-│   │
-│   └── assistant/
-│       ├── __init__.py
-│       └── assistant.py
+├── ui/
+│   ├── main_window.py          # Main application window & menus
+│   ├── canvas_widget.py        # Vector canvas drawing surface
+│   └── toolbar.py              # Floating toolbar, slider, & color swatches
 │
 ├── storage/
-│   ├── __init__.py
-│   ├── document_store.py
-│   └── json_store.py
+│   ├── document_store.py       # Abstract document store interface
+│   └── json_store.py           # Native JSON serialization
 │
-├── resources/
-│   ├── icons/
-│   ├── themes/
-│   └── models/
-│
-├── tests/
-│   ├── test_stroke.py
-│   ├── test_drawing.py
-│   ├── test_document.py
-│   ├── test_storage.py
-│   └── test_ai.py
-│
-├── requirements.txt
-├── README.md
-└── .gitignore
+└── resources/
+    └── icons/
+        ├── app_icon.svg        # Scalable vector application icon
+        ├── app_icon.ico        # Multi-size Windows executable icon
+        └── *.svg               # Toolbar tool icons (pen, eraser, etc.)
 ```
 
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Python 3.11+** installed on your system.
+- Windows 10/11 recommended for full stylus and pressure sensitivity support.
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/BetterNote.git
+   cd BetterNote
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   ```
+
+3. **Install dependencies:**
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+4. **Launch BetterNote:**
+   ```powershell
+   python main.py
+   ```
+
+---
+
+## 📦 Building Executables & Installers
+
+### 1. Build Standalone `.exe` (PyInstaller)
+You can compile BetterNote into a standalone single-file Windows executable:
+
+- **Option A (Easiest)**: Double-click **`build.bat`** in the project folder.
+- **Option B (Terminal)**:
+  ```powershell
+  pyinstaller BetterNote.spec --noconfirm
+  ```
+
+The compiled binary will be placed at:
+> **`dist\BetterNote.exe`**
+
+---
+
+### 2. Build Windows Installer (`.msi` via WiX Toolset)
+To generate an enterprise-grade Windows Installer (`.msi`) that installs to `Program Files` and creates Start Menu and Desktop shortcuts:
+
+1. Install the WiX CLI (if not already installed):
+   ```powershell
+   winget install WiXToolset.WiXCLI
+   ```
+2. Compile the installer:
+   ```powershell
+   wix build BetterNote.wxs -o dist\BetterNote.msi
+   ```
+Output:
+> **`dist\BetterNote.msi`**
+
+---
+
+### 3. Build Setup Wizard (`BetterNote_Setup.exe` via Inno Setup)
+To generate a standard graphical setup installer wizard:
+
+1. Install Inno Setup:
+   ```powershell
+   winget install JR.InnoSetup
+   ```
+2. Compile the script:
+   ```powershell
+   & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" BetterNote.iss
+   ```
+Output:
+> **`dist\BetterNote_Setup.exe`**
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
