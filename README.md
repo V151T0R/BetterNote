@@ -34,7 +34,7 @@
 ###  Getting Started
 
 #### Option 1: Just Run the App
-Download **`BetterNote.exe`** from [Releases](https://github.com/) (or run `dist/BetterNote.exe`) and double-click to launch. No installation or Python required.
+Download **`BetterNote.exe`** from [Releases](https://github.com/V151T0R/BetterNote/releases/tag/v1.0.0) (or run `dist/BetterNote.exe`) and double-click to launch. No installation or Python required.
 
 #### Option 2: Run from Source
 ```bash
