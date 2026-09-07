@@ -1,61 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=['.'],
+    pathex=[],
     binaries=[],
-    datas=[
-        ('resources', 'resources'),
-    ],
-    hiddenimports=[
-        'PySide6.QtCore',
-        'PySide6.QtGui',
-        'PySide6.QtWidgets',
-        'app',
-        'app.application',
-        'app.config',
-        'core',
-        'core.drawing_engine',
-        'core.notebook',
-        'core.page',
-        'core.stroke',
-        'core.commands',
-        'core.commands.add_stroke',
-        'core.commands.delete_stroke',
-        'core.commands.move_stroke',
-        'core.commands.command_manager',
-        'core.tools',
-        'core.tools.pen',
-        'core.tools.eraser',
-        'core.tools.highlighter',
-        'core.tools.selection',
-        'storage',
-        'storage.json_store',
-        'storage.document_store',
-        'ui',
-        'ui.main_window',
-        'ui.canvas_widget',
-        'ui.toolbar',
-    ],
+    datas=[('resources', 'resources')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    optimize=0,
 )
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='BetterNote',
@@ -73,4 +37,3 @@ exe = EXE(
     entitlements_file=None,
     icon=['resources/icons/app_icon.ico'],
 )
-
