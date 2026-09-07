@@ -2,7 +2,7 @@
 
 A modern, distraction-free handwritten digital notebook application built with **Python** and **PySide6 (Qt)**. Designed with a modular vector inking engine, undo/redo command history, customizable color palettes, multi-page notebooks, and export capabilities.
 
-![BetterNote Banner](resources/icons/app_icon.svg)
+
 
 ---
 
