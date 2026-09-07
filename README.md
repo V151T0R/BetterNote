@@ -7,13 +7,27 @@
 
 ---
 
-### ✨ Highlights
+<p align="center">
+  <img src="resources/App%20Preview/1.jpg.png" alt="BetterNote Workspace Preview" width="100%" />
+</p>
+
+---
+
+### Highlights
 
 - **Natural Inking**: Smooth, pressure-sensitive vector pen & blended highlighter.
 - **Essential Tools**: Pen, Highlighter, Eraser, and a Lasso Selection tool to move strokes.
 - **Distraction-Free**: Floating frosted toolbars, calming desk background, and clean paper.
 - **Your Notes, Yours**: Saves directly to lightweight `.json` files. No accounts, no clouds, 100% offline.
 - **Exports**: Quick export to PDF or images (`.png`, `.jpg`) when you need to share.
+
+---
+
+### 📸 Preview
+
+| Clean Workspace & Layout | Freehand Inking & Dark Mode |
+| :---: | :---: |
+| <img src="resources/App%20Preview/1.jpg.png" width="100%" alt="BetterNote Workspace" /> | <img src="resources/App%20Preview/2.jpg.png" width="100%" alt="BetterNote Inking & Sketches" /> |
 
 ---
 
