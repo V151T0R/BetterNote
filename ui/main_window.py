@@ -1,4 +1,5 @@
 import os
+import sys
 from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
                                QFileDialog, QColorDialog, QLabel, QMessageBox,
                                QFrame, QToolButton, QMenu, QWidgetAction, QSlider,
@@ -18,8 +19,11 @@ from ui.toolbar import _WrapLayout, ColorSwapButton, ThicknessSlider
 from storage.json_store import JSONStore
 from app.config import DEFAULT_PINNED_COLORS
 
-# Resolve project root: ui/ -> parent = project root
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Resolve project root: supports both normal Python execution and PyInstaller bundled executable
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    PROJECT_ROOT = sys._MEIPASS
+else:
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def icon(relative_path: str) -> str:
     """Resolve an icon path relative to the project root."""

@@ -31,7 +31,7 @@ def build_theme_stylesheet(palette: QPalette, base_point_size: float) -> str:
     font_family = "'Segoe UI', 'SF Pro Text', 'Inter', -apple-system, sans-serif"
 
     # Soothing desk background that lets the crisp white page with its drop shadow stand out
-    desk_bg = QColor("#18191E") if is_dark else QColor("#F0F2F6")
+    desk_bg = QColor("#575757") if is_dark else QColor("#F0F2F6")
 
     return f"""
 QMainWindow {{
