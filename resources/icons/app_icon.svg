@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient for the Notebook Cover -->
+    <linearGradient id="coverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter for the Pencil -->
+    <filter id="pencilShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="8" dy="12" stdDeviation="10" flood-color="#000000" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <!-- Notebook Cover (Backing) -->
+  <rect x="56" y="36" width="400" height="440" rx="44" fill="url(#coverGrad)" />
+  
+  <!-- Subtle Spine Crease Highlight -->
+  <rect x="80" y="36" width="8" height="440" fill="#FFFFFF" opacity="0.18" />
+
+  <!-- Drop shadow cast by the white paper -->
+  <rect x="114" y="58" width="326" height="402" rx="26" fill="#000000" opacity="0.16" />
+
+  <!-- White Paper Page -->
+  <rect x="116" y="52" width="324" height="408" rx="26" fill="#FFFFFF" />
+
+  <!-- Pink Bookmark -->
+  <path d="M172 52 V 188 L 202 164 L 232 188 V 52 Z" fill="#EC4899" />
+
+  <!-- Text Lines on Paper -->
+  <rect x="172" y="234" width="190" height="14" rx="7" fill="#E5E7EB" />
+  <rect x="172" y="286" width="190" height="14" rx="7" fill="#E5E7EB" />
+  <rect x="172" y="338" width="120" height="14" rx="7" fill="#E5E7EB" />
+
+  <!-- Floating Pencil -->
+  <g transform="translate(390, 316) rotate(35)" filter="url(#pencilShadow)">
+    <!-- Yellow Pencil Body -->
+    <rect x="-20" y="-85" width="40" height="170" rx="4" fill="#FBBF24" />
+    <!-- Center Orange Stripe for 3D Effect -->
+    <rect x="-10" y="-85" width="20" height="170" fill="#F59E0B" />
+    
+    <!-- Wooden Tip -->
+    <path d="M-20 85 L 0 128 L 20 85 Z" fill="#FDE68A" />
+    <!-- Graphite Lead -->
+    <path d="M-6 114 L 0 128 L 6 114 Z" fill="#374151" />
+    
+    <!-- Metal Ferrule -->
+    <rect x="-20" y="-106" width="40" height="21" fill="#9CA3AF" />
+    
+    <!-- Red Eraser -->
+    <path d="M-20 -106 V -118 C -20 -124 -15.5 -129 -10 -129 H 10 C 15.5 -129 20 -124 20 -118 V -106 Z" fill="#F87171" />
+  </g>
+</svg>

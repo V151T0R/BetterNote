@@ -1,0 +1,28 @@
+# Python virtual environment
+
+.venv/
+
+# Python cache
+
+**pycache**/
+*.py[cod]
+
+# Build files
+
+build/
+dist/
+*.egg-info/
+
+# PyInstaller
+
+*.spec
+
+# IDE settings
+
+.vscode/
+.idea/
+
+# OS files
+
+.DS_Store
+Thumbs.db
