@@ -28,9 +28,15 @@
 
 ## Preview
 
-| Clean Workspace & Layout | Freehand Inking & Dark Mode |
-| :---: | :---: |
-| <img src="resources/App_Preview/1.jpg.png" width="100%" alt="BetterNote Workspace" /> | <img src="resources/App_Preview/2.jpg.png" width="100%" alt="BetterNote Inking & Sketches" /> |
+<div align="center">
+  <img src="resources/App_Preview/1.jpg.png" alt="BetterNote Workspace" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+  <p><em>Clean Workspace & Layout</em></p>
+  
+  <br/>
+  
+  <img src="resources/App_Preview/2.jpg.png" alt="BetterNote Inking & Sketches" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+  <p><em>Freehand Inking & Dark Mode</em></p>
+</div>
 
 ---
 
